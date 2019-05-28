@@ -113,7 +113,7 @@ input_line "URL for training materials" TRAINING_URL "$DEFAULT_TRAINING_URL"
 
 # Write config
 make_temp CONFIG_FILE
-echo $CONFIG_FILE
+echo "Cluster config file: $CONFIG_FILE"
 cat > "$CONFIG_FILE" <<EOF
 [global]
 cluster_template = training_cluster
@@ -156,4 +156,12 @@ EOF
 # Launch
 echo "Creating cluster... this usually takes 10-20min"
 pcluster create -c "$CONFIG_FILE" "$CLUSTER_NAME"
+pcluster_success=$?
+
+# Remind people to be tidy
+if [ $pcluster_success -eq 0 ] ; then
+  echo "Your cluster is up and IS NOW INCURRING CHARGES!"
+  echo "Don't forget to delete the cluster when it's no longer needed:"
+  echo "pcluster delete $CLUSTER_NAME"
+fi
 
