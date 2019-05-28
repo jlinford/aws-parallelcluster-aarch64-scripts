@@ -1,18 +1,18 @@
 #!/bin/bash
+#
+# John Linford <john.linford@arm.com>
+#
 
+if [ $# -lt 2 ] ; then
+  echo "Usage: $0 s3_aas_license num_users [training_url]"
+  exit -1
+fi
+S3_AAS_LICENSE="$1"
+NUSERS="$2"
+TRAINING_URL="$3"
+UNAME_BASE="student"
+PASSWD_BASE="Tr@ining"
 
-function parse_args {
-  if [ $# -lt 3 ] ; then
-    echo "Usage: $0 s3_motd s3_aas_license num_users [uname_tmpl] [passwd_tmpl]"
-    exit -1
-  fi
-
-  S3_MOTD="$1"
-  S3_AAS_LICENSE="$2"
-  NUSERS="$3"
-  UNAME_BASE="${4:-student}"
-  PASSWD_BASE="${5:-Tr@ining}"
-}
 
 function create_users {
   # Create user accounts
@@ -36,14 +36,15 @@ function install_aas_license {
   aws s3 cp "$S3_AAS_LICENSE" "/opt/arm/licenses/license"
 }
 
-function install_motd {
-  # AWS ParallelCluster enables access via s3_read_resource
-  aws s3 cp "$S3_MOTD" "/etc/motd"
+function update_motd {
+  if [ ! -z "$TRAINING_URL" ] ; then 
+    echo "Training materials available at:" >> /etc/motd
+    echo "$TRAINING_URL" >> /etc/motd
+  fi
 }
 
-
-parse_args
 create_users
 install_aas_license
-install_motd
+update_motd
+
 

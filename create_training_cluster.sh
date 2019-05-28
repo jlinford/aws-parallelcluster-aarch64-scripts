@@ -4,6 +4,9 @@
 #
 
 DEFAULT_CLUSTER_SIZE=20
+DEFAULT_S3_AAS_LICENSE="s3://com.arm.cluster/licenses/default_license"
+DEFAULT_TRAINING_URL="http://arm.com/hpc"
+
 CUSTOM_AMI="ami-06f5438d5563336f4"
 CUSTOM_COOKBOOK="https://s3.eu-west-1.amazonaws.com/com.arm.cluster/cookbooks/aws-parallelcluster-cookbook-2.4.0.tgz"
 COMPUTE_INSTANCE_TYPE="a1.large"
@@ -64,7 +67,7 @@ function _get_aws_object {
 
 function get_key_pair {
   echo "Available key pairs:"
-  _get_aws_object "describe-key-pairs" "KeyPairs" "keyName" "True" "Key Name" KEY_NAME
+  _get_aws_object "describe-key-pairs" "KeyPairs" "KeyName" "True" "Key Pair" KEY_NAME
 }
 
 function get_subnet {
@@ -74,6 +77,13 @@ function get_subnet {
   _get_aws_object "describe-subnets" "Subnets" "SubnetId" "obj[\"VpcId\"] == \"$VPC_ID\"" "Subnet" SUBNET_ID
 }
 
+
+# Get cluster config
+input_line "New Cluster Name" CLUSTER_NAME
+echo "Each student has their own compute node, so cluster size is both the "
+echo "number of compute nodes and the number of student accounts."
+input_line "New Cluster Size" CLUSTER_SIZE "$DEFAULT_CLUSTER_SIZE"
+
 # Get AWS region and credentials
 input_line "AWS Region" AWS_DEFAULT_REGION "$AWS_DEFAULT_REGION"
 input_line "AWS Access Key ID" AWS_ACCESS_KEY_ID "$AWS_ACCESS_KEY_ID"
@@ -82,13 +92,13 @@ export AWS_DEFAULT_REGION
 export AWS_ACCESS_KEY_ID 
 export AWS_SECRET_ACCESS_KEY
 
-# Get cluster config
-input_line "New Cluster Name" CLUSTER_NAME
-echo "Each student has their own compute node, so cluster size is both the "
-echo "number of compute nodes and the number of student accounts."
-input_line "New Cluster Size" CLUSTER_SIZE "$DEFAULT_CLUSTER_SIZE"
-get_aws_key 
+# Get AWS key pair, VPC, and subnet
+get_key_pair
 get_subnet
+
+# Customize cluster
+input_line "S3 URL for Arm Allinea Studio License" S3_AAS_LICENSE "$DEFAULT_S3_AAS_LICENSE"
+input_line "URL for training materials" TRAINING_URL "$DEFAULT_TRAINING_URL"
 
 # Write config
 make_temp CONFIG_FILE
@@ -112,6 +122,8 @@ master_subnet_id = $SUBNET_ID
 key_name = $KEY_NAME
 vpc_settings = public
 s3_read_resource = arn:aws:s3:::com.arm.cluster/*
+post_install = s3://com.arm.cluster/scripts/post_install_training_cluster.sh
+post_install_args = $S3_AAS_LICENSE $CLUSTER_SIZE $TRAINING_URL
 # Lower and upper bounds on compute node instances
 initial_queue_size = $CLUSTER_SIZE
 max_queue_size = 100
@@ -131,5 +143,6 @@ maintain_initial_size = true
 EOF
 
 # Launch
+echo "Creating cluster... this usually takes 10-20min"
 pcluster create -c "$CONFIG_FILE" "$CLUSTER_NAME"
 
