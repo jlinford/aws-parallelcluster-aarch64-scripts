@@ -55,7 +55,7 @@ function _get_aws_object {
   prompt="$5"
   dest="$6"
   all_obj=()
-  for obj in `aws ec2 ${ec2_cmd} | python -c "import sys, json; [print(obj[\"$attribute\"]) for obj in json.load(sys.stdin)[\"$collection\"] if $predicate]"` ; do
+  for obj in `aws ec2 ${ec2_cmd} | python -c "from __future__ import print_function; import sys, json; [print(obj[\"$attribute\"]) for obj in json.load(sys.stdin)[\"$collection\"] if $predicate]"` ; do
     all_obj+=("$obj")
   done
   for obj in ${all_obj[@]} ; do
