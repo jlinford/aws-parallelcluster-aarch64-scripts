@@ -3,11 +3,7 @@
 # John Linford <john.linford@arm.com>
 #
 
-DEFAULT_KEY_NAME="jcl"
-DEFAULT_VPC_ID="vpc-b1fb0bd4"
-DEFAULT_MASTER_SUBNET_ID="subnet-95be6cf0"
 DEFAULT_CLUSTER_SIZE=20
-
 CUSTOM_AMI="ami-06f5438d5563336f4"
 CUSTOM_COOKBOOK="https://s3.eu-west-1.amazonaws.com/com.arm.cluster/cookbooks/aws-parallelcluster-cookbook-2.4.0.tgz"
 COMPUTE_INSTANCE_TYPE="a1.large"
