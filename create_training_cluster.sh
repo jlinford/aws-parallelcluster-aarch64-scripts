@@ -7,7 +7,7 @@ DEFAULT_CLUSTER_SIZE=20
 DEFAULT_S3_AAS_LICENSE="s3://com.arm.cluster/licenses/default_license"
 DEFAULT_TRAINING_URL="http://arm.com/hpc"
 
-CUSTOM_AMI="ami-06f5438d5563336f4"
+CUSTOM_AMI="ami-0a98d6c3c8ffb8774"
 CUSTOM_COOKBOOK="https://s3.eu-west-1.amazonaws.com/com.arm.cluster/cookbooks/aws-parallelcluster-cookbook-2.4.0.tgz"
 COMPUTE_INSTANCE_TYPE="a1.large"
 MASTER_INSTANCE_TYPE="a1.xlarge"
