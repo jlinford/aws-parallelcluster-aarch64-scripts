@@ -134,7 +134,7 @@ key_name = $KEY_NAME
 vpc_settings = public
 s3_read_resource = arn:aws:s3:::com.arm.cluster/*
 post_install = s3://com.arm.cluster/scripts/post_install_training_cluster.sh
-post_install_args = $S3_AAS_LICENSE $CLUSTER_SIZE $TRAINING_URL
+post_install_args = "$S3_AAS_LICENSE $CLUSTER_SIZE $TRAINING_URL"
 # Lower and upper bounds on compute node instances
 initial_queue_size = $CLUSTER_SIZE
 max_queue_size = 100
