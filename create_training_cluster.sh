@@ -78,6 +78,7 @@ function get_subnet {
 }
 
 # Check environment
+export PATH="$HOME/.local/bin:$PATH"
 if ! which aws > /dev/null ; then
   echo "Please install awscli: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"
   echo "e.g. 'pip install awscli'"
