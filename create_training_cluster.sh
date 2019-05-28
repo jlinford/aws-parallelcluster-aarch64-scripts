@@ -19,7 +19,7 @@ function cleanup {
     rm -f "$tempfile"
   done
 }
-#trap cleanup exit 
+trap cleanup exit 
 
 function make_temp {
   dest="$1"
@@ -77,6 +77,17 @@ function get_subnet {
   _get_aws_object "describe-subnets" "Subnets" "SubnetId" "obj[\"VpcId\"] == \"$VPC_ID\"" "Subnet" SUBNET_ID
 }
 
+# Check environment
+if ! which aws > /dev/null ; then
+  echo "Please install awscli: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html"
+  echo "e.g. 'pip install awscli'"
+  exit 1
+fi
+if ! which pcluster > /dev/null ; then
+  echo "Please install aws-parallelcluster: https://aws-parallelcluster.readthedocs.io/en/latest/getting_started.html"
+  echo "e.g. 'pip install aws-parallelcluster'"
+  exit 1
+fi
 
 # Get cluster config
 input_line "New Cluster Name" CLUSTER_NAME
