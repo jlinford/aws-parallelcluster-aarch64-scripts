@@ -7,10 +7,10 @@ DEFAULT_CLUSTER_SIZE=20
 DEFAULT_S3_AAS_LICENSE="s3://com.arm.cluster/licenses/default_license"
 DEFAULT_TRAINING_URL="http://arm.com/hpc"
 
-CUSTOM_AMI="ami-0a98d6c3c8ffb8774"
+CUSTOM_AMI="ami-076b958cfe131e161"
 CUSTOM_COOKBOOK="https://s3.eu-west-1.amazonaws.com/com.arm.cluster/cookbooks/aws-parallelcluster-cookbook-2.4.0.tgz"
-COMPUTE_INSTANCE_TYPE="a1.large"
-MASTER_INSTANCE_TYPE="a1.xlarge"
+COMPUTE_INSTANCE_TYPE="a1.2xlarge"
+MASTER_INSTANCE_TYPE="a1.4xlarge"
 
 declare -a TEMP_FILES
 
@@ -77,6 +77,31 @@ function get_subnet {
   _get_aws_object "describe-subnets" "Subnets" "SubnetId" "obj[\"VpcId\"] == \"$VPC_ID\"" "Subnet" SUBNET_ID
 }
 
+function get_cluster_size {
+  echo "Checking maximum cluster size..."
+  val=`aws ec2 describe-account-attributes | python -c 'from __future__ import print_function; import sys, json; [print(vals["AttributeValue"]) for attr in json.load(sys.stdin)["AccountAttributes"] for vals in attr["AttributeValues"] if attr["AttributeName"] == "max-instances"]'`
+  if [ $val -le 1 ] ; then
+    echo "Error: Your AWS account is limited to $val instances, but you need at least two for a cluster."
+    exit 1
+  fi
+  # Save one for the head node
+  ((val--))
+  MAX_CLUSTER_SIZE=$val
+
+  echo "Each student has their own compute node, so cluster size is both the "
+  echo "number of compute nodes and the number of student accounts."
+  while true ; do
+    input_line "New Cluster Size (1 to $MAX_CLUSTER_SIZE)" CLUSTER_SIZE "$DEFAULT_CLUSTER_SIZE"
+    if [ $CLUSTER_SIZE -gt $MAX_CLUSTER_SIZE ] ; then
+      echo "Error: your AWS account supports at most $MAX_CLUSTER_SIZE compute nodes."
+    elif [ $CLUSTER_SIZE -le 0 ] ; then
+      echo "Error: please enter a number larger than $CLUSTER_SIZE"
+    else
+      break
+    fi
+  done
+}
+
 # Check environment
 export PATH="$HOME/.local/bin:$PATH"
 if ! which aws > /dev/null ; then
@@ -90,12 +115,6 @@ if ! which pcluster > /dev/null ; then
   exit 1
 fi
 
-# Get cluster config
-input_line "New Cluster Name" CLUSTER_NAME
-echo "Each student has their own compute node, so cluster size is both the "
-echo "number of compute nodes and the number of student accounts."
-input_line "New Cluster Size" CLUSTER_SIZE "$DEFAULT_CLUSTER_SIZE"
-
 # Get AWS region and credentials
 input_line "AWS Region" AWS_DEFAULT_REGION "$AWS_DEFAULT_REGION"
 input_line "AWS Access Key ID" AWS_ACCESS_KEY_ID "$AWS_ACCESS_KEY_ID"
@@ -103,6 +122,10 @@ input_line "AWS Secret Access Key" AWS_SECRET_ACCESS_KEY "$AWS_SECRET_ACCESS_KEY
 export AWS_DEFAULT_REGION
 export AWS_ACCESS_KEY_ID 
 export AWS_SECRET_ACCESS_KEY
+
+# Get cluster config
+input_line "New Cluster Name" CLUSTER_NAME
+get_cluster_size
 
 # Get AWS key pair, VPC, and subnet
 get_key_pair
@@ -138,7 +161,7 @@ post_install = s3://com.arm.cluster/scripts/post_install_training_cluster.sh
 post_install_args = "$S3_AAS_LICENSE $CLUSTER_SIZE $TRAINING_URL"
 # Lower and upper bounds on compute node instances
 initial_queue_size = $CLUSTER_SIZE
-max_queue_size = 100
+max_queue_size = $MAX_CLUSTER_SIZE
 # aarch64 support
 custom_ami = $CUSTOM_AMI
 custom_chef_cookbook = $CUSTOM_COOKBOOK
