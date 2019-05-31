@@ -2,6 +2,8 @@
 #
 # John Linford <john.linford@arm.com>
 #
+# Creates a new HPC cluster optimized for training events, e.g. SVE hackathons.
+#
 
 DEFAULT_CLUSTER_SIZE=20
 DEFAULT_S3_AAS_LICENSE="s3://com.arm.cluster/licenses/default_license"
